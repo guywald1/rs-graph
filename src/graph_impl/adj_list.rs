@@ -33,22 +33,24 @@ impl<'a, N: 'a + Debug + Hash + Clone + Eq> Iterator for Edges<'a, N> {
     type Item = Edge<&'a N>;
 
     fn next (&mut self) -> Option<Edge<&'a N>> {
-        if self.curr_key.is_none() {
-            return None;
-        }
-        let curr_key = self.curr_key.unwrap();
-        let vec = self.list.get(curr_key).unwrap();
-        if self.curr_index == vec.len() {
-            let next_key = self.keys_iter.next();
-            if next_key.is_none() {
-                return None;
-            }
+        let mut curr_key = match self.curr_key {
+            Some(n) => n,
+            None => return None
+        };
+        let mut vec = self.list.get(curr_key).unwrap();
+        while vec.len() == 0 || self.curr_index == vec.len() {
             self.curr_index = 0;
-            self.curr_key = next_key;
+            curr_key = match self.keys_iter.next() {
+                Some(n) => n,
+                None => return None
+            };
+            vec = self.list.get(curr_key).unwrap();
         }
-        let other_key = &self.list.get(&self.curr_key.unwrap()).unwrap()[self.curr_index];
+        let other_key = &vec[self.curr_index];
         self.curr_index += 1;
-        Some(Edge(self.curr_key.unwrap(), other_key))
+        self.curr_key = Some(curr_key);
+        Some(Edge(curr_key, &other_key))
+
     }
 }
 
