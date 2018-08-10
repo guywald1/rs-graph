@@ -1,7 +1,7 @@
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
+#![cfg_attr(test, allow(dead_code))]
+
+mod graph_impl;
+
+pub mod graph {
+    pub use graph_impl::{DiGraph};
 }
