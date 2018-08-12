@@ -18,7 +18,7 @@ mod tests {
 
     #[bench]
     fn bench_contains_cycles(b: &mut Bencher) {
-        for _ in 1..5 {
+        for _ in 0..10 {
             b.iter(|| {
                 let nodes: Vec<usize> = (1..10_000).collect();
                 let mut edges = vec![(1, 2), (2, 300), (300, 401), (401, 502), (502, 1)];

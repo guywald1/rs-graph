@@ -44,11 +44,8 @@ impl<'a, N: 'a + Debug + Hash + Clone + Eq> Iterator for Edges<'a, N> {
         let mut vec = self.list.get(curr_key).unwrap();
         while vec.len() == 0 || self.curr_index == vec.len() {
             self.curr_index = 0;
-            curr_key = match self.keys_iter.next() {
-                Some(n) => n,
-                None => return None,
-            };
-            vec = self.list.get(curr_key).unwrap();
+            curr_key = self.keys_iter.next()?;
+            vec = self.list.get(curr_key)?;
         }
         let other_key = &vec[self.curr_index];
         self.curr_index += 1;
