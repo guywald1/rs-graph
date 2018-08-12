@@ -1,5 +1,5 @@
 [package]
-name = "rs-graph"
+name = "rsgraph"
 version = "0.1.0"
 authors = ["Guy Waldman <guywald1@gmail.com>"]
 

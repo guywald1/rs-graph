@@ -2,7 +2,7 @@ mod adj_list;
 
 use self::adj_list::{AdjList, Edges, Nodes};
 use std::cmp::Eq;
-use std::collections::{HashMap,HashSet};
+use std::collections::HashSet;
 use std::fmt::Debug;
 use std::hash::Hash;
 
@@ -34,7 +34,6 @@ impl<'a, N: 'a + Debug + Hash + Eq + Clone + Copy> DiGraph<N> {
     pub fn size(&self) -> usize {
         self.adj_list.size()
     }
-
 }
 
 pub fn contains_cycle<N>(graph: &DiGraph<N>) -> bool
@@ -42,10 +41,9 @@ where
     N: Debug + Hash + Eq + Clone + Copy,
 {
     let mut total_visited: HashSet<&N> = HashSet::from(graph.nodes().collect());
-    let mut tree_visited: HashSet<&N> = HashSet::with_capacity(graph.size());
 
     while let Some(n) = total_visited.iter().next().map(|&n| n) {
-        tree_visited.drain();
+        let mut tree_visited: HashSet<&N> = HashSet::with_capacity(graph.size());
         let mut to_visit: Vec<&N> = vec![&n];
         while !to_visit.is_empty() {
             let curr = to_visit.pop().unwrap();
@@ -62,8 +60,9 @@ where
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use super::*;
+    use test::Bencher;
 
     #[test]
     fn nodes_edges_test() {
@@ -83,17 +82,28 @@ mod test {
 
     #[test]
     fn detect_cycle() {
-        let di_graph = DiGraph::from(&[1,2,3,4], &[(1,2)]);
+        let di_graph = DiGraph::from(&[1, 2, 3, 4], &[(1, 2)]);
         assert_eq!(false, contains_cycle(&di_graph));
-        let di_graph = DiGraph::from(&[1,2,3,4], &[(1,2), (2,1)]);
+        let di_graph = DiGraph::from(&[1, 2, 3, 4], &[(1, 2), (2, 1)]);
         assert_eq!(true, contains_cycle(&di_graph));
-        let di_graph = DiGraph::from(&[1,2,3,4], &[]);
+        let di_graph = DiGraph::from(&[1, 2, 3, 4], &[]);
         assert_eq!(false, contains_cycle(&di_graph));
-        let di_graph = DiGraph::from(&[1,2,3,4], &[(1,2), (2,3), (3,1)]);
+        let di_graph = DiGraph::from(&[1, 2, 3, 4], &[(1, 2), (2, 3), (3, 1)]);
         assert_eq!(true, contains_cycle(&di_graph));
-        let di_graph = DiGraph::from(&[1,2,3,4], &[(1,4), (2,3), (4,1)]);
+        let di_graph = DiGraph::from(&[1, 2, 3, 4], &[(1, 4), (2, 3), (4, 1)]);
         assert_eq!(true, contains_cycle(&di_graph));
-        let di_graph = DiGraph::from(&[1,2,3,4], &[(1,4), (2,3), (4,2)]);
+        let di_graph = DiGraph::from(&[1, 2, 3, 4], &[(1, 4), (2, 3), (4, 2)]);
         assert_eq!(false, contains_cycle(&di_graph));
+        let nodes: Vec<usize> = (1..1_000).collect();
+        let mut edges = vec![(1, 2), (2, 300), (300, 401), (401, 502), (502, 1)];
+        edges.append(
+            &mut (1..10)
+                .collect::<Vec<usize>>()
+                .iter()
+                .map(|&i| (i, 2 * i))
+                .collect::<Vec<(usize, usize)>>(),
+        );
+        let di_graph: DiGraph<usize> = DiGraph::from(&nodes, &edges);
+        assert_eq!(true, contains_cycle(&di_graph));
     }
 }
