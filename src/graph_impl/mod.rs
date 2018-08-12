@@ -41,26 +41,20 @@ pub fn contains_cycle<N>(graph: &DiGraph<N>) -> bool
 where
     N: Debug + Hash + Eq + Clone + Copy,
 {
-    let mut total_visited: HashSet<&N> = HashSet::with_capacity(graph.size());
-    let mut tree_visited: HashMap<&N, bool> = HashMap::with_capacity(graph.size());
-    for node in graph.nodes() {
-        total_visited.insert(node);
-        tree_visited.insert(node, false);
-    }
+    let mut total_visited: HashSet<&N> = HashSet::from(graph.nodes().collect());
+    let mut tree_visited: HashSet<&N> = HashSet::with_capacity(graph.size());
 
     while let Some(n) = total_visited.iter().next().map(|&n| n) {
-        for node in graph.nodes() {
-            tree_visited.insert(node, false);
-        }
+        tree_visited.drain();
         let mut to_visit: Vec<&N> = vec![&n];
         while !to_visit.is_empty() {
             let curr = to_visit.pop().unwrap();
-            if *tree_visited.get(curr).unwrap() == true {
+            if tree_visited.contains(curr) {
                 return true;
             }
             let children = graph.adj_list.list.get(curr).unwrap();
             to_visit.splice(0..0, children);
-            tree_visited.insert(curr, true);
+            tree_visited.insert(curr);
         }
         total_visited.remove(n);
     }
