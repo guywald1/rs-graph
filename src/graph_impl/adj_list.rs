@@ -1,18 +1,22 @@
-use std::cmp::{Eq, PartialEq};
+use std::cmp::{Eq};
+use std::collections::hash_map::Keys;
+use std::collections::HashMap;
 use std::fmt::Debug;
 use std::hash::Hash;
-use std::collections::HashMap;
-use std::collections::hash_map::Keys;
 
-pub struct AdjList<N : Debug + Hash + Clone + Eq> {
-    list: HashMap<N, Vec<N>>
+pub struct AdjList<N: Debug + Hash + Clone + Eq> {
+    pub list: HashMap<N, Vec<N>>,
+    pub size: usize,
 }
 
-pub struct Nodes<'a, N : 'a> {
-    inner: Keys<'a, N, Vec<N>>
+pub struct Nodes<'a, N: 'a> {
+    inner: Keys<'a, N, Vec<N>>,
 }
 
-impl<'a, N> Iterator for Nodes<'a, N> where N : 'a {
+impl<'a, N> Iterator for Nodes<'a, N>
+where
+    N: 'a,
+{
     type Item = &'a N;
     fn next(&mut self) -> Option<&'a N> {
         self.inner.next()
@@ -22,27 +26,27 @@ impl<'a, N> Iterator for Nodes<'a, N> where N : 'a {
 #[derive(Debug, PartialEq)]
 pub struct Edge<N>(N, N);
 
-pub struct Edges<'a, N : 'a + Debug + Hash + Clone + Eq> {
+pub struct Edges<'a, N: 'a + Debug + Hash + Clone + Eq> {
     keys_iter: Keys<'a, N, Vec<N>>,
     curr_key: Option<&'a N>,
     curr_index: usize,
-    list: &'a HashMap<N, Vec<N>>
+    list: &'a HashMap<N, Vec<N>>,
 }
 
 impl<'a, N: 'a + Debug + Hash + Clone + Eq> Iterator for Edges<'a, N> {
     type Item = Edge<&'a N>;
 
-    fn next (&mut self) -> Option<Edge<&'a N>> {
+    fn next(&mut self) -> Option<Edge<&'a N>> {
         let mut curr_key = match self.curr_key {
             Some(n) => n,
-            None => return None
+            None => return None,
         };
         let mut vec = self.list.get(curr_key).unwrap();
         while vec.len() == 0 || self.curr_index == vec.len() {
             self.curr_index = 0;
             curr_key = match self.keys_iter.next() {
                 Some(n) => n,
-                None => return None
+                None => return None,
             };
             vec = self.list.get(curr_key).unwrap();
         }
@@ -50,14 +54,14 @@ impl<'a, N: 'a + Debug + Hash + Clone + Eq> Iterator for Edges<'a, N> {
         self.curr_index += 1;
         self.curr_key = Some(curr_key);
         Some(Edge(curr_key, &other_key))
-
     }
 }
 
-impl<N : Debug + Hash + Clone + Eq> AdjList<N> {
+impl<N: Debug + Hash + Clone + Eq> AdjList<N> {
     pub fn new() -> AdjList<N> {
         AdjList {
-            list: HashMap::new()
+            list: HashMap::new(),
+            size: 0,
         }
     }
     pub fn from(nodes: &[N], edges: &[(N, N)]) -> AdjList<N> {
@@ -67,20 +71,29 @@ impl<N : Debug + Hash + Clone + Eq> AdjList<N> {
             list.insert(n.clone(), Vec::new());
         }
         for (k, v) in edges {
-            list
-                .get_mut(k)
-                .unwrap()
-                .push(v.clone());
+            list.get_mut(k).unwrap().push(v.clone());
         }
-        AdjList { list }
+        AdjList { list, size: nodes.len() }
     }
+
+    pub fn size(&self) -> usize {
+        self.size
+    }
+
     pub fn nodes(&self) -> Nodes<N> {
-        Nodes { inner: self.list.keys() }
+        Nodes {
+            inner: self.list.keys(),
+        }
     }
-    pub fn edges<'a> (&'a self) -> Edges<N> {
+    pub fn edges<'a>(&'a self) -> Edges<N> {
         let mut keys_iter = self.list.keys();
         let curr_key = keys_iter.next();
-        Edges { list: &self.list, keys_iter, curr_key, curr_index: 0 }
+        Edges {
+            list: &self.list,
+            keys_iter,
+            curr_key,
+            curr_index: 0,
+        }
     }
 }
 
@@ -102,21 +115,21 @@ mod test {
     fn nodes_test() {
         let list: AdjList<usize> = AdjList::new();
         assert_eq!(list.nodes().count(), 0);
-        let list = AdjList::from(&[1,2,3,4], &[(1,2), (2,3), (3,1), (4,2)]);
+        let list = AdjList::from(&[1, 2, 3, 4], &[(1, 2), (2, 3), (3, 1), (4, 2)]);
         let mut nodes = list.nodes().collect::<Vec<_>>();
         nodes.sort();
         assert_eq!(4, nodes.len());
         for n in 0..4 {
-            assert_eq!(n+1, *nodes[n]);
+            assert_eq!(n + 1, *nodes[n]);
         }
     }
 
     #[test]
     fn edges_test() {
-        let mut edges = [(1,2), (2,3), (3,1), (4,2)];
-        let list = AdjList::from(&[1,2,3,4], &edges);
+        let mut edges = [(1, 2), (2, 3), (3, 1), (4, 2)];
+        let list = AdjList::from(&[1, 2, 3, 4], &edges);
         edges.sort();
-        let mut edges_from_list = list.edges().map(|Edge(n,m)| (*n,*m)).collect::<Vec<_>>();
+        let mut edges_from_list = list.edges().map(|Edge(n, m)| (*n, *m)).collect::<Vec<_>>();
         edges_from_list.sort();
         assert_eq!(edges_from_list, edges);
     }
